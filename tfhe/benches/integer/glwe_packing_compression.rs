@@ -50,6 +50,10 @@ fn cpu_glwe_packing(c: &mut Criterion) {
         match BENCH_TYPE.get().unwrap() {
             BenchmarkType::Latency => {
                 let ct = cks.encrypt_radix(0_u32, num_blocks);
+                let serialized = bincode::serialize(&ct).unwrap();
+                println!("FheUint{bit_size}");
+
+                println!("ct size: {} bytes", serialized.len());
 
                 let mut builder = CompressedCiphertextListBuilder::new();
 
@@ -65,6 +69,21 @@ fn cpu_glwe_packing(c: &mut Criterion) {
                 });
 
                 let compressed = builder.build(&compression_key);
+
+                let serialized_compressed = bincode::serialize(&compressed).unwrap();
+                println!("ct compressed size: {} bytes", serialized_compressed.len());
+
+                let compression_ratio =
+                    serialized.len() as f64 / serialized_compressed.len() as f64;
+
+                println!("compression_ratio: {compression_ratio}x compression");
+
+                let expansion_factor = serialized.len() as f64 / (bit_size as f64 / 8.0);
+                let compressed_expansion_factor =
+                    serialized_compressed.len() as f64 / (bit_size as f64 / 8.0);
+
+                println!("expansion_factor: {expansion_factor}");
+                println!("compressed_expansion_factor: {compressed_expansion_factor}");
 
                 bench_id_unpack = format!("{bench_name}::unpack_u{bit_size}");
                 bench_group.bench_function(&bench_id_unpack, |b| {
