@@ -14,7 +14,7 @@ members = [
     "utils/tfhe-versionable-derive",
     "utils/param_dedup",
     "tests",
-    "mockups/tfhe-hpu-mockup",
+    "mockups/tfhe-hpu-mockup", "tfhe/benches/bench_sum",
 ]
 
 exclude = [

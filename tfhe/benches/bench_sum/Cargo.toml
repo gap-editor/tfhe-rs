@@ -1,0 +1,12 @@
+[package]
+name = "bench_sum"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+rand = "0.8"
+tfhe = { version = "~1.2.0", features = ["boolean", "shortint", "integer", "gpu"] }
+
+[features]
+default = []
+gpu = ["tfhe/gpu"]
