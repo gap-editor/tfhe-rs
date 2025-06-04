@@ -5,8 +5,11 @@ edition = "2024"
 
 [dependencies]
 rand = "0.8"
-tfhe = { version = "~1.2.0", features = ["boolean", "shortint", "integer", "gpu"] }
+tfhe = { path = "../../", features = ["integer", "nightly-avx512"] }
 
 [features]
 default = []
 gpu = ["tfhe/gpu"]
+
+[profile.release]
+lto = "fat"
