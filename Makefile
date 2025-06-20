@@ -57,7 +57,7 @@ TFHECUDA_SRC=backends/tfhe-cuda-backend/cuda
 TFHECUDA_BUILD=$(TFHECUDA_SRC)/build
 
 # tfhe-hpu-backend
-HPU_CONFIG=v80
+HPU_CONFIG=v80_pfail128
 
 # Exclude these files from coverage reports
 define COVERAGE_EXCLUDED_FILES
@@ -909,7 +909,7 @@ test_high_level_api_gpu: install_rs_build_toolchain install_cargo_nextest
 		-E "test(/high_level_api::.*gpu.*/)"
 
 test_high_level_api_hpu: install_rs_build_toolchain install_cargo_nextest
-ifeq ($(HPU_CONFIG), v80)
+ifeq ($(HPU_CONFIG), v80_pfail128)
 	RUSTFLAGS="$(RUSTFLAGS)" cargo $(CARGO_RS_BUILD_TOOLCHAIN) nextest run --cargo-profile $(CARGO_PROFILE) \
 		--build-jobs=$(CARGO_BUILD_JOBS) \
 		--test-threads=1 \

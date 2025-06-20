@@ -3718,6 +3718,8 @@ fn go_through_gpu_bench_groups(val: &str) {
 fn go_through_hpu_bench_groups(val: &str) {
     match val.to_lowercase().as_str() {
         "default" => {
+            hpu::default_hpu_shiftrot();
+            hpu::default_hpu_bitcnt();
             hpu::default_hpu_ops();
             hpu::default_hpu_ops_scalar();
             hpu::default_hpu_bitwise();

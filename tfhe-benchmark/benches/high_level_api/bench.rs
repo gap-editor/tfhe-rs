@@ -15,6 +15,8 @@ where
     for<'a> &'a FheType: Add<&'a FheType, Output = FheType>
         + Sub<&'a FheType, Output = FheType>
         + Mul<&'a FheType, Output = FheType>
+        + FheMin<&'a FheType, Output = FheType>
+        + FheMax<&'a FheType, Output = FheType>
         + BitAnd<&'a FheType, Output = FheType>
         + BitOr<&'a FheType, Output = FheType>
         + BitXor<&'a FheType, Output = FheType>
@@ -44,7 +46,16 @@ where
     });
     name.clear();
 
-    #[cfg(not(feature = "hpu"))]
+    write!(name, "min({type_name}, {type_name})").unwrap();
+    bench_group.bench_function(&name, |b| {
+        b.iter(|| {
+            let res = lhs.min(&rhs);
+            res.wait();
+            black_box(res)
+        })
+    });
+    name.clear();
+
     {
         write!(name, "overflowing_add({type_name}, {type_name})").unwrap();
         bench_group.bench_function(&name, |b| {
@@ -57,7 +68,6 @@ where
         name.clear();
     }
 
-    #[cfg(not(feature = "hpu"))]
     {
         write!(name, "overflowing_sub({type_name}, {type_name})").unwrap();
         bench_group.bench_function(&name, |b| {
@@ -120,7 +130,6 @@ where
     });
     name.clear();
 
-    #[cfg(not(feature = "hpu"))]
     {
         write!(name, "shl({type_name}, {type_name})").unwrap();
         bench_group.bench_function(&name, |b| {
