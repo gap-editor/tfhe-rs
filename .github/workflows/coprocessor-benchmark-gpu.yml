@@ -143,31 +143,32 @@ jobs:
 
       - name: Checkout tfhe-rs
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        with:
+          path: tfhe-rs
 
       - name: Check fhEVM and TFHE-rs repos
         run: |
           pwd
           ls
-          ls ../
 
       - name: Checkout fhevm
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         with:
-          repository: zama/fhevm
+          repository: zama-ai/fhevm
           persist-credentials: 'false'
           fetch-depth: 0
           lfs: true
           ref: antoniu/use-tfhe-main-benches
+          path: fhevm
 
       - name: Check fhEVM and TFHE-rs repos
         run: |
           pwd
           ls
-          ls ../
-        working-directory: fhevm/coprocessor
 
-#      - name: Checkout LFS objects
-#        run: git lfs checkout
+      - name: Checkout LFS objects
+        run: git lfs checkout
+        working-directory: fhevm/
 
       - name: Setup Hyperstack dependencies
         uses: ./.github/actions/gpu_setup
@@ -220,7 +221,7 @@ jobs:
 
       - name: Init database
         run: make init_db
-        working-directory: coprocessor/fhevm-engine/coprocessor
+        working-directory: fhevm/coprocessor/fhevm-engine/coprocessor
 
       - name: Use Node.js
         uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
@@ -231,6 +232,8 @@ jobs:
         env:
           HARDHAT_NETWORK: hardhat
         run: |
+          ls
+          pwd
           cp ./host-contracts/.env.example ./host-contracts/.env
           npm --prefix ./host-contracts ci --include=optional
           cd host-contracts && npm install && npm run deploy:emptyProxies && npx hardhat compile
