@@ -144,6 +144,12 @@ jobs:
       - name: Checkout tfhe-rs
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
+      - name: Check fhEVM and TFHE-rs repos
+        run: |
+          pwd
+          ls
+          ls ../
+
       - name: Checkout fhevm
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         with:
@@ -158,7 +164,7 @@ jobs:
           pwd
           ls
           ls ../
-        working-directory: coprocessor
+        working-directory: fhevm/coprocessor
 
 #      - name: Checkout LFS objects
 #        run: git lfs checkout
