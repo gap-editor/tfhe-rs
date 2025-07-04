@@ -334,7 +334,8 @@ void execute_pbs_async(
     }
   } else {
     static_assert(
-        std::is_same_v<OutputTorus, uint32_t> || std::is_same_v<OutputTorus, uint64_t> ||
+        std::is_same_v<OutputTorus, uint32_t> ||
+            std::is_same_v<OutputTorus, uint64_t> ||
             std::is_same_v<OutputTorus, __uint128_t>,
         "Cuda error: unsupported modulus size: only 32, 64, or 128-bit integer "
         "moduli are supported.");
@@ -388,9 +389,10 @@ void execute_scratch_pbs(cudaStream_t stream, uint32_t gpu_index,
     case MULTI_BIT:
       if (grouping_factor == 0)
         PANIC("Multi-bit PBS error: grouping factor should be > 0.")
-      *size_tracker = scratch_cuda_multi_bit_programmable_bootstrap_128_vector_64(
-          stream, gpu_index, pbs_buffer, glwe_dimension, polynomial_size,
-          level_count, input_lwe_ciphertext_count, allocate_gpu_memory);
+      *size_tracker =
+          scratch_cuda_multi_bit_programmable_bootstrap_128_vector_64(
+              stream, gpu_index, pbs_buffer, glwe_dimension, polynomial_size,
+              level_count, input_lwe_ciphertext_count, allocate_gpu_memory);
       break;
     case CLASSICAL:
       *size_tracker = scratch_cuda_programmable_bootstrap_128(

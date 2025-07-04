@@ -159,8 +159,7 @@ void execute_keyswitch_async(cudaStream_t const *streams,
     auto current_lwe_output_indexes =
         get_variant_element(lwe_output_indexes, i);
     auto current_lwe_array_in = get_variant_element(lwe_array_in, i);
-    auto current_lwe_input_indexes =
-        get_variant_element(lwe_input_indexes, i);
+    auto current_lwe_input_indexes = get_variant_element(lwe_input_indexes, i);
 
     // Compute Keyswitch
     host_keyswitch_lwe_ciphertext_vector<Torus>(

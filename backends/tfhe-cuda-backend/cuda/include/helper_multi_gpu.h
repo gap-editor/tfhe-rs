@@ -16,13 +16,15 @@ template <typename Torus>
 using LweArrayVariant = std::variant<std::vector<Torus *>, Torus *>;
 
 // Macro to define the visitor logic using std::holds_alternative for vectors
-template<typename Torus>
-Torus* get_variant_element(const std::variant<std::vector<Torus*>, Torus*>& variant, size_t index) {
-    if (std::holds_alternative<std::vector<Torus*>>(variant)) {
-        return std::get<std::vector<Torus*>>(variant)[index];
-    } else {
-        return std::get<Torus*>(variant);
-    }
+template <typename Torus>
+Torus *
+get_variant_element(const std::variant<std::vector<Torus *>, Torus *> &variant,
+                    size_t index) {
+  if (std::holds_alternative<std::vector<Torus *>>(variant)) {
+    return std::get<std::vector<Torus *>>(variant)[index];
+  } else {
+    return std::get<Torus *>(variant);
+  }
 }
 
 int get_active_gpu_count(int num_inputs, int gpu_count);

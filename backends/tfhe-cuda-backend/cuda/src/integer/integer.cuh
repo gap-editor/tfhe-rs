@@ -2269,15 +2269,16 @@ __host__ void integer_radix_apply_noise_squashing_kb(
     /// Apply PBS to apply a LUT, reduce the noise and go from a small LWE
     /// dimension to a big LWE dimension
     ///
-    /// int_noise_squashing_lut doesn't support a different output or lut indexing than the trivial
+    /// int_noise_squashing_lut doesn't support a different output or lut
+    /// indexing than the trivial
     execute_pbs_async<uint64_t, __uint128_t>(
         streams, gpu_indexes, 1, (__uint128_t *)lwe_array_out->ptr,
         lwe_trivial_indexes_vec[0], lut->lut_vec, lwe_trivial_indexes_vec,
-        lwe_after_ks_vec[0], lwe_trivial_indexes_vec[0],
-        bsks, ms_noise_reduction_key,
-        lut->pbs_buffer, glwe_dimension,small_lwe_dimension,  polynomial_size,
-        pbs_base_log, pbs_level, grouping_factor, lwe_array_out->num_radix_blocks,
-        params.pbs_type, 0, 0);
+        lwe_after_ks_vec[0], lwe_trivial_indexes_vec[0], bsks,
+        ms_noise_reduction_key, lut->pbs_buffer, glwe_dimension,
+        small_lwe_dimension, polynomial_size, pbs_base_log, pbs_level,
+        grouping_factor, lwe_array_out->num_radix_blocks, params.pbs_type, 0,
+        0);
   } else {
     /// Make sure all data that should be on GPU 0 is indeed there
     cuda_synchronize_stream(streams[0], gpu_indexes[0]);
@@ -2296,16 +2297,15 @@ __host__ void integer_radix_apply_noise_squashing_kb(
         ksks, lut->input_big_lwe_dimension, small_lwe_dimension, ks_base_log,
         ks_level, lwe_array_out->num_radix_blocks);
 
-    /// int_noise_squashing_lut doesn't support a different output or lut indexing than the trivial
+    /// int_noise_squashing_lut doesn't support a different output or lut
+    /// indexing than the trivial
     execute_pbs_async<uint64_t, __uint128_t>(
         streams, gpu_indexes, active_gpu_count, lwe_after_pbs_vec,
-        lwe_trivial_indexes_vec,
-        lut->lut_vec,lwe_trivial_indexes_vec,
-        lwe_after_ks_vec, lwe_trivial_indexes_vec,
-        bsks, ms_noise_reduction_key, lut->pbs_buffer,
-        glwe_dimension, small_lwe_dimension, polynomial_size, pbs_base_log,
-        pbs_level, grouping_factor, lwe_array_out->num_radix_blocks,
-        params.pbs_type, 0, 0);
+        lwe_trivial_indexes_vec, lut->lut_vec, lwe_trivial_indexes_vec,
+        lwe_after_ks_vec, lwe_trivial_indexes_vec, bsks, ms_noise_reduction_key,
+        lut->pbs_buffer, glwe_dimension, small_lwe_dimension, polynomial_size,
+        pbs_base_log, pbs_level, grouping_factor,
+        lwe_array_out->num_radix_blocks, params.pbs_type, 0, 0);
 
     /// Copy data back to GPU 0 and release vecs
     multi_gpu_gather_lwe_async<__uint128_t>(

@@ -1,6 +1,7 @@
 pub mod boolean_value;
 pub mod compact_list;
 pub mod compressed_ciphertext_list;
+mod compressed_noise_squashed_ciphertext_list;
 pub mod info;
 pub mod squashed_noise;
 

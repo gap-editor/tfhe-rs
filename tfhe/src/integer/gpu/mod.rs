@@ -7,7 +7,6 @@ pub mod server_key;
 #[cfg(feature = "zk-pok")]
 pub mod zk;
 
-use std::any::TypeId;
 use crate::core_crypto::gpu::lwe_bootstrap_key::{
     prepare_cuda_ms_noise_reduction_key_ffi, CudaModulusSwitchNoiseReductionKey,
 };
@@ -31,6 +30,7 @@ use crate::shortint::parameters::ModulusSwitchType;
 use crate::shortint::{CarryModulus, MessageModulus};
 use itertools::Itertools;
 pub use server_key::CudaServerKey;
+use std::any::TypeId;
 use std::cmp::min;
 use tfhe_cuda_backend::bindings::*;
 use tfhe_cuda_backend::cuda_bind::*;
@@ -638,7 +638,10 @@ where
 ///
 /// - [CudaStreams::synchronize] __must__ be called after this function as soon as synchronization
 ///   is required
-pub unsafe fn compress_integer_radix_async<InputTorus: UnsignedInteger, OutputTorus: UnsignedInteger>(
+pub unsafe fn compress_integer_radix_async<
+    InputTorus: UnsignedInteger,
+    OutputTorus: UnsignedInteger,
+>(
     streams: &CudaStreams,
     glwe_array_out: &mut CudaVec<OutputTorus>,
     lwe_array_in: &CudaVec<InputTorus>,

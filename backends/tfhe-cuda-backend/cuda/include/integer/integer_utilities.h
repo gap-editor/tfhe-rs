@@ -315,7 +315,7 @@ template <typename Torus> struct int_radix_lut {
           streams[i], gpu_indexes[i], &gpu_pbs_buffer, params.glwe_dimension,
           params.small_lwe_dimension, params.polynomial_size, params.pbs_level,
           params.grouping_factor, num_blocks_on_gpu, params.pbs_type,
-          allocate_gpu_memory, params.allocate_ms_array, size);
+          allocate_gpu_memory, params.allocate_ms_array, &size);
       if (i == 0) {
         size_tracker += size;
       }
@@ -531,7 +531,7 @@ template <typename Torus> struct int_radix_lut {
           streams[i], gpu_indexes[i], &gpu_pbs_buffer, params.glwe_dimension,
           params.small_lwe_dimension, params.polynomial_size, params.pbs_level,
           params.grouping_factor, num_blocks_on_gpu, params.pbs_type,
-          allocate_gpu_memory, params.allocate_ms_array, size);
+          allocate_gpu_memory, params.allocate_ms_array, &size);
       if (i == 0) {
         size_tracker += size;
       }
@@ -833,12 +833,11 @@ template <typename InputTorus> struct int_noise_squashing_lut {
           get_num_inputs_on_gpu(num_radix_blocks, i, active_gpu_count);
       int8_t *gpu_pbs_buffer;
       uint64_t size = 0;
-      execute_scratch_pbs<__uint128_t>(streams[i], gpu_indexes[i], &gpu_pbs_buffer,
-                              params.glwe_dimension, params.small_lwe_dimension,
-                              params.polynomial_size, params.pbs_level, params.grouping_factor,
-                              num_radix_blocks_on_gpu, params.pbs_type,
-                              allocate_gpu_memory,
-                              params.allocate_ms_array, size);
+      execute_scratch_pbs<__uint128_t>(
+          streams[i], gpu_indexes[i], &gpu_pbs_buffer, params.glwe_dimension,
+          params.small_lwe_dimension, params.polynomial_size, params.pbs_level,
+          params.grouping_factor, num_radix_blocks_on_gpu, params.pbs_type,
+          allocate_gpu_memory, params.allocate_ms_array, &size);
       cuda_synchronize_stream(streams[i], gpu_indexes[i]);
       if (i == 0) {
         size_tracker += size;

@@ -41,7 +41,6 @@ void cleanup_cuda_integer_decompress_radix_ciphertext_64(
     void *const *streams, uint32_t const *gpu_indexes, uint32_t gpu_count,
     int8_t **mem_ptr_void);
 
-
 uint64_t scratch_cuda_integer_compress_radix_ciphertext_128(
     void *const *streams, uint32_t const *gpu_indexes, uint32_t gpu_count,
     int8_t **mem_ptr, uint32_t compression_glwe_dimension,

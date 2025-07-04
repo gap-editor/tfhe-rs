@@ -2,9 +2,12 @@ use crate::core_crypto::gpu::lwe_ciphertext_list::CudaLweCiphertextList;
 use crate::core_crypto::gpu::CudaStreams;
 use crate::core_crypto::prelude::{LweCiphertextCount, LweCiphertextOwned, LweSize};
 use crate::integer::ciphertext::{
-    SquashedNoiseBooleanBlock, SquashedNoiseRadixCiphertext, SquashedNoiseSignedRadixCiphertext,
+    DataKind, SquashedNoiseBooleanBlock, SquashedNoiseRadixCiphertext,
+    SquashedNoiseSignedRadixCiphertext,
 };
+use crate::integer::gpu::ciphertext::compressed_ciphertext_list::CudaCompressible;
 use crate::integer::gpu::ciphertext::info::{CudaBlockInfo, CudaRadixCiphertextInfo};
+use crate::integer::gpu::ciphertext::CudaRadixCiphertext;
 use crate::shortint::ciphertext::{Degree, NoiseLevel, SquashedNoiseCiphertext};
 use crate::shortint::parameters::CoreCiphertextModulus;
 use crate::shortint::{AtomicPatternKind, CarryModulus, MessageModulus, PBSOrder};
@@ -59,6 +62,14 @@ impl CudaSquashedNoiseRadixCiphertext {
                 blocks: blocks_info,
             },
             original_block_count,
+        }
+    }
+
+    pub fn duplicate(&self, streams: &CudaStreams) -> Self {
+        Self {
+            packed_d_blocks: self.packed_d_blocks.duplicate(streams),
+            info: self.info.duplicate(),
+            original_block_count: self.original_block_count,
         }
     }
 
@@ -120,5 +131,15 @@ impl CudaSquashedNoiseBooleanBlock {
                 .packed_blocks[0]
                 .clone(),
         }
+    }
+}
+
+impl CudaCompressible for CudaSquashedNoiseRadixCiphertext {
+    fn compress_into(
+        self,
+        messages: &mut Vec<CudaRadixCiphertext>,
+        streams: &CudaStreams,
+    ) -> DataKind {
+        todo!()
     }
 }
