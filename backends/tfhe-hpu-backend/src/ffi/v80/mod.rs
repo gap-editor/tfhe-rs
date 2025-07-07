@@ -40,7 +40,7 @@ impl HpuHw {
     /// otherwise reload Pdi
     #[inline(always)]
     pub fn new_hpu_hw(
-        id: u32,
+        id: &str,
         hpu_path: &str,
         ami_path: &str,
         ami_retry: std::time::Duration,
@@ -54,7 +54,7 @@ impl HpuHw {
         // Try current hw and fallback to a fresh reload
         Self::try_current_hw(id, &hpu_pdi, ami_retry, h2c_path, c2h_path).unwrap_or_else(|err| {
             tracing::warn!("Loading current HW failed with {err:?}. Will do a fresh reload");
-            Self::reload_hw(id, &hpu_pdi, ami_path, ami_retry, h2c_path, c2h_path)
+            Self::reload_hw(&id, &hpu_pdi, ami_path, ami_retry, h2c_path, c2h_path)
         })
     }
 
@@ -62,7 +62,7 @@ impl HpuHw {
     /// NB: This procedure required unload of Qdma/Ami driver and thus couldn't be directly
     /// implemented     in the AMI
     fn try_current_hw(
-        id: u32,
+        id: &str,
         pdi: &HpuV80Pdi,
         ami_retry: std::time::Duration,
         h2c_path: &str,
@@ -96,7 +96,7 @@ impl HpuHw {
     /// NB: This procedure required unload of Qdma/Ami driver and thus couldn't be directly
     /// implemented     in the AMI
     fn reload_hw(
-        id: u32,
+        id: &str,
         pdi: &HpuV80Pdi,
         ami_path: &str,
         ami_retry: std::time::Duration,

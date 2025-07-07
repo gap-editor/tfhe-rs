@@ -174,7 +174,7 @@ impl HpuHw {
                     qdma_h2c,
                     qdma_c2h,
                 } => Self(v80::HpuHw::new_hpu_hw(
-                    *id,
+                    &id.expand(),
                     &hpu_path.expand(),
                     &ami_path.expand(),
                     retry_rate,
