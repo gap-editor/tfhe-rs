@@ -590,4 +590,29 @@ pub mod test_tools {
         assert!(lower_bound_abs_diff / approx_expected_lower_bound.0 < 0.01);
         assert!(upper_bound_abs_diff / approx_expected_upper_bound.0 < 0.01);
     }
+
+    #[test]
+    fn test_chi2_guassian_equivalence() {
+        let degrees_of_freedom = 125_000f64;
+        let chi2 = ChiSquared::new(degrees_of_freedom).unwrap();
+
+        let equiv_gaussian_mean = degrees_of_freedom;
+        let equiv_gaussian_var = 2. * degrees_of_freedom;
+
+        let approx_chi_2 = Normal::new(equiv_gaussian_mean, equiv_gaussian_var.sqrt()).unwrap();
+
+        let alpha = 0.001f64;
+
+        let chi2_lower = chi2.inverse_cdf(alpha / 2.0);
+        let chi2_upper = chi2.inverse_cdf(1.0 - alpha / 2.0);
+
+        let approx_chi2_lower = approx_chi_2.inverse_cdf(alpha / 2.0);
+        let approx_chi2_upper = approx_chi_2.inverse_cdf(1.0 - alpha / 2.0);
+
+        println!("chi2_lower=       {chi2_lower}");
+        println!("approx_chi2_lower={approx_chi2_lower}");
+
+        println!("chi2_upper=       {chi2_upper}");
+        println!("approx_chi2_upper={approx_chi2_upper}");
+    }
 }
