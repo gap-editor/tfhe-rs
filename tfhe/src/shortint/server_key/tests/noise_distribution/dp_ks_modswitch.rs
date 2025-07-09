@@ -20,7 +20,7 @@ use crate::shortint::server_key::tests::parameterized_test::create_parameterized
 use crate::shortint::server_key::{ServerKey, ShortintBootstrappingKey};
 use rayon::prelude::*;
 
-fn dp_ks_modswitch<
+pub fn dp_ks_modswitch<
     InputCt,
     ScalarMulResult,
     KsResult,
