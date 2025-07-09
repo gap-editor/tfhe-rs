@@ -1,3 +1,4 @@
+pub(crate) mod br_dp_ks_modswitch;
 pub(crate) mod dp_ks_modswitch;
 pub(crate) mod dp_ks_pbs128_packingks;
 pub(crate) mod utils;
