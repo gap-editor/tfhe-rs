@@ -43,6 +43,7 @@ impl std::str::FromStr for ShellString {
 pub enum FFIMode {
     V80 {
         id: ShellString,
+        board_sn: ShellString,
         hpu_path: ShellString,
         ami_path: ShellString,
         qdma_h2c: ShellString,

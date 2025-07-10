@@ -44,12 +44,13 @@ impl AmiInfo {
             .open(AMI_ID_FILE)?;
 
         let devices_rd = BufReader::new(devices_file);
-        let line = devices_rd.lines().find(|line_result| {
-                match line_result {
-                    Ok(l)  => l.starts_with(ami_id),
-                    Err(_) => false,
-                }})
-                .ok_or("Could not find line starting with {ami_id:?}.")??;
+        let line = devices_rd
+            .lines()
+            .find(|line_result| match line_result {
+                Ok(l) => l.starts_with(ami_id),
+                Err(_) => false,
+            })
+            .ok_or("Could not find line starting with {ami_id:?}.")??;
 
         // Extract AMI device path
         lazy_static! {
