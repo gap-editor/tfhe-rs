@@ -204,11 +204,11 @@ __host__ void set_trivial_radix_ciphertext_async(
 // decrease radix_in num_radix_blocks by 1
 template <typename Torus>
 void pop_radix_ciphertext_block_async(cudaStream_t stream, uint32_t gpu_index,
-                                      CudaRadixCiphertextFFI *block,
+                                      CudaRadixCiphertextFFI *radix_out,
                                       CudaRadixCiphertextFFI *radix_in) {
   copy_radix_ciphertext_slice_async<Torus>(
-      stream, gpu_index, block, 0, 1, radix_in, radix_in->num_radix_blocks - 1,
-      radix_in->num_radix_blocks);
+      stream, gpu_index, radix_out, 0, 1, radix_in,
+      radix_in->num_radix_blocks - 1, radix_in->num_radix_blocks);
   reset_radix_ciphertext_blocks(radix_in, radix_in->num_radix_blocks - 1);
 }
 // Increase the number of blocks of radix_out by 1 and shift data left by one

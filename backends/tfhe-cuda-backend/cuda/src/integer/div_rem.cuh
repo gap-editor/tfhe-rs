@@ -80,6 +80,8 @@ __host__ void host_unsigned_integer_div_rem_kb(
   set_zero_radix_ciphertext_slice_async<Torus>(streams[0], gpu_indexes[0],
                                                quotient, 0, num_blocks);
 
+  auto gpu_count_num_blocks = get_active_gpu_count(num_blocks, gpu_count);
+
   for (int i = total_bits - 1; i >= 0; i--) {
     uint32_t pos_in_block = i % num_bits_in_message;
     uint32_t msb_bit_set = total_bits - 1 - i;
@@ -243,22 +245,24 @@ __host__ void host_unsigned_integer_div_rem_kb(
     for (uint j = 0; j < gpu_count; j++) {
       cuda_synchronize_stream(streams[j], gpu_indexes[j]);
     }
-    // interesting_divisor
+    // interesting_divisor uses 1 GPU always (1 block only)
     trim_last_interesting_divisor_bits(mem_ptr->sub_streams_1, gpu_indexes,
                                        gpu_count);
-    // divisor_ms_blocks
+    // divisor_ms_blocks uses 1 GPU always (1 block only)
     trim_first_divisor_ms_bits(mem_ptr->sub_streams_2, gpu_indexes, gpu_count);
-    // interesting_remainder1
+    // interesting_remainder1 num_blocks + 1
     // numerator_block_stack
     left_shift_interesting_remainder1(mem_ptr->sub_streams_3, gpu_indexes,
                                       gpu_count);
-    // interesting_remainder2
+    // interesting_remainder2 num_blocks
     left_shift_interesting_remainder2(mem_ptr->sub_streams_4, gpu_indexes,
                                       gpu_count);
+    cuda_synchronize_stream(mem_ptr->sub_streams_1[0], gpu_indexes[0]);
+    cuda_synchronize_stream(mem_ptr->sub_streams_2[0], gpu_indexes[0]);
     for (uint j = 0; j < mem_ptr->active_gpu_count; j++) {
-      cuda_synchronize_stream(mem_ptr->sub_streams_1[j], gpu_indexes[j]);
-      cuda_synchronize_stream(mem_ptr->sub_streams_2[j], gpu_indexes[j]);
       cuda_synchronize_stream(mem_ptr->sub_streams_3[j], gpu_indexes[j]);
+    }
+    for (uint j = 0; j < gpu_count_num_blocks; j++) {
       cuda_synchronize_stream(mem_ptr->sub_streams_4[j], gpu_indexes[j]);
     }
 
@@ -369,14 +373,14 @@ __host__ void host_unsigned_integer_div_rem_kb(
       cuda_synchronize_stream(streams[j], gpu_indexes[j]);
     }
     // new_remainder
-    // subtraction_overflowed
+    // subtraction_overflowed using num_blocks
     do_overflowing_sub(mem_ptr->sub_streams_1, gpu_indexes, gpu_count);
-    // at_least_one_upper_block_is_non_zero
+    // at_least_one_upper_block_is_non_zero using num_blocks
     check_divisor_upper_blocks(mem_ptr->sub_streams_2, gpu_indexes, gpu_count);
-    // cleaned_merged_interesting_remainder
+    // cleaned_merged_interesting_remainder using num_blocks
     create_clean_version_of_merged_remainder(mem_ptr->sub_streams_3,
                                              gpu_indexes, gpu_count);
-    for (uint j = 0; j < mem_ptr->active_gpu_count; j++) {
+    for (uint j = 0; j < gpu_count_num_blocks; j++) {
       cuda_synchronize_stream(mem_ptr->sub_streams_1[j], gpu_indexes[j]);
       cuda_synchronize_stream(mem_ptr->sub_streams_2[j], gpu_indexes[j]);
       cuda_synchronize_stream(mem_ptr->sub_streams_3[j], gpu_indexes[j]);
@@ -440,19 +444,19 @@ __host__ void host_unsigned_integer_div_rem_kb(
     for (uint j = 0; j < gpu_count; j++) {
       cuda_synchronize_stream(streams[j], gpu_indexes[j]);
     }
-    // cleaned_merged_interesting_remainder
+    // cleaned_merged_interesting_remainder uses num_blocks
     conditionally_zero_out_merged_interesting_remainder(mem_ptr->sub_streams_1,
                                                         gpu_indexes, gpu_count);
-    // new_remainder
+    // new_remainder uses num_blocks
     conditionally_zero_out_merged_new_remainder(mem_ptr->sub_streams_2,
                                                 gpu_indexes, gpu_count);
-    // quotient
+    // quotient 1 block only
     set_quotient_bit(mem_ptr->sub_streams_3, gpu_indexes, gpu_count);
-    for (uint j = 0; j < mem_ptr->active_gpu_count; j++) {
+    for (uint j = 0; j < gpu_count_num_blocks; j++) {
       cuda_synchronize_stream(mem_ptr->sub_streams_1[j], gpu_indexes[j]);
       cuda_synchronize_stream(mem_ptr->sub_streams_2[j], gpu_indexes[j]);
-      cuda_synchronize_stream(mem_ptr->sub_streams_3[j], gpu_indexes[j]);
     }
+    cuda_synchronize_stream(mem_ptr->sub_streams_3[0], gpu_indexes[0]);
 
     if (first_trivial_block !=
         cleaned_merged_interesting_remainder->num_radix_blocks)
@@ -489,7 +493,7 @@ __host__ void host_unsigned_integer_div_rem_kb(
   integer_radix_apply_univariate_lookup_table_kb<Torus>(
       mem_ptr->sub_streams_2, gpu_indexes, gpu_count, quotient, quotient, bsks,
       ksks, ms_noise_reduction_key, mem_ptr->message_extract_lut_2, num_blocks);
-  for (uint j = 0; j < mem_ptr->active_gpu_count; j++) {
+  for (uint j = 0; j < gpu_count_num_blocks; j++) {
     cuda_synchronize_stream(mem_ptr->sub_streams_1[j], gpu_indexes[j]);
     cuda_synchronize_stream(mem_ptr->sub_streams_2[j], gpu_indexes[j]);
   }
@@ -541,7 +545,7 @@ __host__ void host_integer_div_rem_kb(
     }
 
     host_unsigned_integer_div_rem_kb<Torus>(
-        int_mem_ptr->sub_streams_1, gpu_indexes, gpu_count, quotient, remainder,
+        streams, gpu_indexes, gpu_count, quotient, remainder,
         positive_numerator, positive_divisor, bsks, ksks,
         ms_noise_reduction_key, int_mem_ptr->unsigned_mem);
 
@@ -552,16 +556,10 @@ __host__ void host_integer_div_rem_kb(
     as_radix_ciphertext_slice<Torus>(&divisor_sign, divisor, num_blocks - 1,
                                      num_blocks);
     integer_radix_apply_bivariate_lookup_table_kb<Torus>(
-        int_mem_ptr->sub_streams_2, gpu_indexes, gpu_count,
-        int_mem_ptr->sign_bits_are_different, &numerator_sign, &divisor_sign,
-        bsks, ksks, ms_noise_reduction_key,
+        streams, gpu_indexes, gpu_count, int_mem_ptr->sign_bits_are_different,
+        &numerator_sign, &divisor_sign, bsks, ksks, ms_noise_reduction_key,
         int_mem_ptr->compare_signed_bits_lut, 1,
         int_mem_ptr->compare_signed_bits_lut->params.message_modulus);
-
-    for (uint j = 0; j < int_mem_ptr->active_gpu_count; j++) {
-      cuda_synchronize_stream(int_mem_ptr->sub_streams_1[j], gpu_indexes[j]);
-      cuda_synchronize_stream(int_mem_ptr->sub_streams_2[j], gpu_indexes[j]);
-    }
 
     host_integer_radix_negation<Torus>(int_mem_ptr->sub_streams_1, gpu_indexes,
                                        gpu_count, int_mem_ptr->negated_quotient,

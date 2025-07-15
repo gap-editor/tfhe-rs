@@ -4424,16 +4424,16 @@ template <typename Torus> struct unsigned_int_div_rem_memory {
                               bool allocate_gpu_memory,
                               uint64_t &size_tracker) {
     gpu_memory_allocated = allocate_gpu_memory;
-    active_gpu_count = get_active_gpu_count(2 * num_blocks, gpu_count);
+    active_gpu_count = get_active_gpu_count(num_blocks + 1, gpu_count);
 
     this->params = params;
     shift_mem_1 = new int_logical_scalar_shift_buffer<Torus>(
         streams, gpu_indexes, gpu_count, SHIFT_OR_ROTATE_TYPE::LEFT_SHIFT,
-        params, 2 * num_blocks, allocate_gpu_memory, size_tracker);
+        params, num_blocks + 1, allocate_gpu_memory, size_tracker);
 
     shift_mem_2 = new int_logical_scalar_shift_buffer<Torus>(
         streams, gpu_indexes, gpu_count, SHIFT_OR_ROTATE_TYPE::LEFT_SHIFT,
-        params, 2 * num_blocks, allocate_gpu_memory, size_tracker);
+        params, num_blocks, allocate_gpu_memory, size_tracker);
 
     uint32_t compute_overflow = 1;
     overflow_sub_mem = new int_borrow_prop_memory<Torus>(
@@ -4957,7 +4957,6 @@ template <typename Torus> struct int_div_rem_memory {
   // sub streams
   cudaStream_t *sub_streams_1;
   cudaStream_t *sub_streams_2;
-  cudaStream_t *sub_streams_3;
 
   // temporary device buffers
   CudaRadixCiphertextFFI *positive_numerator;
@@ -4973,7 +4972,7 @@ template <typename Torus> struct int_div_rem_memory {
                      bool allocate_gpu_memory, uint64_t &size_tracker) {
 
     gpu_memory_allocated = allocate_gpu_memory;
-    this->active_gpu_count = get_active_gpu_count(2 * num_blocks, gpu_count);
+    this->active_gpu_count = get_active_gpu_count(num_blocks, gpu_count);
     this->params = params;
     this->is_signed = is_signed;
 
@@ -5042,12 +5041,9 @@ template <typename Torus> struct int_div_rem_memory {
           (cudaStream_t *)malloc(active_gpu_count * sizeof(cudaStream_t));
       sub_streams_2 =
           (cudaStream_t *)malloc(active_gpu_count * sizeof(cudaStream_t));
-      sub_streams_3 =
-          (cudaStream_t *)malloc(active_gpu_count * sizeof(cudaStream_t));
       for (uint j = 0; j < active_gpu_count; j++) {
         sub_streams_1[j] = cuda_create_stream(gpu_indexes[j]);
         sub_streams_2[j] = cuda_create_stream(gpu_indexes[j]);
-        sub_streams_3[j] = cuda_create_stream(gpu_indexes[j]);
       }
 
       // init lookup tables
@@ -5114,11 +5110,9 @@ template <typename Torus> struct int_div_rem_memory {
       for (uint i = 0; i < active_gpu_count; i++) {
         cuda_destroy_stream(sub_streams_1[i], gpu_indexes[i]);
         cuda_destroy_stream(sub_streams_2[i], gpu_indexes[i]);
-        cuda_destroy_stream(sub_streams_3[i], gpu_indexes[i]);
       }
       free(sub_streams_1);
       free(sub_streams_2);
-      free(sub_streams_3);
 
       // delete temporary buffers
       delete positive_numerator;
