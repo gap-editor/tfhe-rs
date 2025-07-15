@@ -266,12 +266,13 @@ __host__ uint64_t scratch_integer_unsigned_scalar_div_rem_radix(
     uint32_t gpu_count, const int_radix_params params,
     int_unsigned_scalar_div_rem_buffer<Torus> **mem_ptr,
     uint32_t num_radix_blocks, const CudaScalarDivisorFFI *scalar_divisor_ffi,
-    uint32_t const active_bits_divisor, const bool allocate_gpu_memory) {
+    const CudaScalarMultiplierFFI *scalar_multiplier_ffi,
+    const bool allocate_gpu_memory) {
 
   uint64_t size_tracker = 0;
   *mem_ptr = new int_unsigned_scalar_div_rem_buffer<Torus>(
       streams, gpu_indexes, gpu_count, params, num_radix_blocks,
-      scalar_divisor_ffi, active_bits_divisor, allocate_gpu_memory,
+      scalar_divisor_ffi, scalar_multiplier_ffi, allocate_gpu_memory,
       size_tracker);
   return size_tracker;
 }
@@ -285,8 +286,7 @@ __host__ void host_integer_unsigned_scalar_div_rem_radix(
     Torus *const *ksks,
     CudaModulusSwitchNoiseReductionKeyFFI const *ms_noise_reduction_key,
     const CudaScalarDivisorFFI *scalar_divisor_ffi,
-    uint64_t const *divisor_has_at_least_one_set,
-    uint64_t const *decomposed_divisor, uint32_t const num_scalars_divisor,
+    const CudaScalarMultiplierFFI *scalar_multiplier_ffi,
     Torus const *clear_blocks, Torus const *h_clear_blocks,
     uint32_t num_clear_blocks) {
 
@@ -316,10 +316,12 @@ __host__ void host_integer_unsigned_scalar_div_rem_radix(
           remainder_ct->num_radix_blocks != 0) {
 
         host_integer_scalar_mul_radix<Torus>(
-            streams, gpu_indexes, gpu_count, remainder_ct, decomposed_divisor,
-            divisor_has_at_least_one_set, mem_ptr->scalar_mul_mem, bsks, ksks,
-            ms_noise_reduction_key, mem_ptr->params.message_modulus,
-            num_scalars_divisor);
+            streams, gpu_indexes, gpu_count, remainder_ct,
+            scalar_multiplier_ffi->decomposed_divisor,
+            scalar_multiplier_ffi->divisor_has_at_least_one_set,
+            mem_ptr->scalar_mul_mem, bsks, ksks, ms_noise_reduction_key,
+            mem_ptr->params.message_modulus,
+            scalar_multiplier_ffi->num_scalars);
       }
     }
 
@@ -339,13 +341,14 @@ __host__ uint64_t scratch_integer_signed_scalar_div_rem_radix(
     uint32_t gpu_count, const int_radix_params params,
     int_signed_scalar_div_rem_buffer<Torus> **mem_ptr,
     uint32_t num_radix_blocks, const CudaScalarDivisorFFI *scalar_divisor_ffi,
-    uint32_t const active_bits_divisor, const bool allocate_gpu_memory) {
+    const CudaScalarMultiplierFFI *scalar_multiplier_ffi,
+    const bool allocate_gpu_memory) {
 
   uint64_t size_tracker = 0;
 
   *mem_ptr = new int_signed_scalar_div_rem_buffer<Torus>(
       streams, gpu_indexes, gpu_count, params, num_radix_blocks,
-      scalar_divisor_ffi, active_bits_divisor, allocate_gpu_memory,
+      scalar_divisor_ffi, scalar_multiplier_ffi, allocate_gpu_memory,
       size_tracker);
 
   return size_tracker;
@@ -360,8 +363,7 @@ __host__ void host_integer_signed_scalar_div_rem_radix(
     Torus *const *ksks,
     CudaModulusSwitchNoiseReductionKeyFFI const *ms_noise_reduction_key,
     const CudaScalarDivisorFFI *scalar_divisor_ffi,
-    uint64_t const *divisor_has_at_least_one_set,
-    uint64_t const *decomposed_divisor, uint32_t const num_scalars_divisor,
+    const CudaScalarMultiplierFFI *scalar_multiplier_ffi,
     uint32_t numerator_bits) {
 
   auto numerator_ct = mem_ptr->numerator_ct;
@@ -396,10 +398,11 @@ __host__ void host_integer_signed_scalar_div_rem_radix(
 
     if (!is_divisor_one && remainder_ct->num_radix_blocks != 0) {
       host_integer_scalar_mul_radix<Torus>(
-          streams, gpu_indexes, gpu_count, remainder_ct, decomposed_divisor,
-          divisor_has_at_least_one_set, mem_ptr->scalar_mul_mem, bsks, ksks,
-          ms_noise_reduction_key, mem_ptr->params.message_modulus,
-          num_scalars_divisor);
+          streams, gpu_indexes, gpu_count, remainder_ct,
+          scalar_multiplier_ffi->decomposed_divisor,
+          scalar_multiplier_ffi->divisor_has_at_least_one_set,
+          mem_ptr->scalar_mul_mem, bsks, ksks, ms_noise_reduction_key,
+          mem_ptr->params.message_modulus, scalar_multiplier_ffi->num_scalars);
     }
   }
 

@@ -5573,8 +5573,8 @@ template <typename Torus> struct int_unsigned_scalar_div_rem_buffer {
       cudaStream_t const *streams, uint32_t const *gpu_indexes,
       uint32_t gpu_count, const int_radix_params params,
       uint32_t num_radix_blocks, const CudaScalarDivisorFFI *scalar_divisor_ffi,
-      uint32_t const active_bits_divisor, const bool allocate_gpu_memory,
-      uint64_t &size_tracker) {
+      const CudaScalarMultiplierFFI *scalar_multiplier_ffi,
+      const bool allocate_gpu_memory, uint64_t &size_tracker) {
 
     this->params = params;
     this->allocate_gpu_memory = allocate_gpu_memory;
@@ -5597,7 +5597,8 @@ template <typename Torus> struct int_unsigned_scalar_div_rem_buffer {
           !scalar_divisor_ffi->is_abs_divisor_one && num_radix_blocks != 0) {
         this->scalar_mul_mem = new int_scalar_mul_buffer<Torus>(
             streams, gpu_indexes, gpu_count, params, num_radix_blocks,
-            active_bits_divisor, allocate_gpu_memory, true, size_tracker);
+            scalar_multiplier_ffi->active_bits, allocate_gpu_memory, true,
+            size_tracker);
       }
       this->sub_and_propagate_mem = new int_sub_and_propagate<Torus>(
           streams, gpu_indexes, gpu_count, params, num_radix_blocks, FLAG_NONE,
@@ -5646,8 +5647,8 @@ template <typename Torus> struct int_signed_scalar_div_rem_buffer {
       cudaStream_t const *streams, uint32_t const *gpu_indexes,
       uint32_t gpu_count, const int_radix_params params,
       uint32_t num_radix_blocks, const CudaScalarDivisorFFI *scalar_divisor_ffi,
-      uint32_t const active_bits_divisor, const bool allocate_gpu_memory,
-      uint64_t &size_tracker) {
+      const CudaScalarMultiplierFFI *scalar_multiplier_ffi,
+      const bool allocate_gpu_memory, uint64_t &size_tracker) {
 
     this->params = params;
     this->allocate_gpu_memory = allocate_gpu_memory;
@@ -5679,7 +5680,8 @@ template <typename Torus> struct int_signed_scalar_div_rem_buffer {
                num_radix_blocks != 0) {
       this->scalar_mul_mem = new int_scalar_mul_buffer<Torus>(
           streams, gpu_indexes, gpu_count, params, num_radix_blocks,
-          active_bits_divisor, allocate_gpu_memory, true, size_tracker);
+          scalar_multiplier_ffi->active_bits, allocate_gpu_memory, true,
+          size_tracker);
     }
 
     this->sub_and_propagate_mem = new int_sub_and_propagate<Torus>(

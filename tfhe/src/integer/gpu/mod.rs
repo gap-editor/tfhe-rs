@@ -100,6 +100,15 @@ pub fn prepare_default_scalar_divisor() -> CudaScalarDivisorFFI {
     }
 }
 
+pub fn prepare_default_scalar_multiplier() -> CudaScalarMultiplierFFI {
+    CudaScalarMultiplierFFI {
+        divisor_has_at_least_one_set: std::ptr::null(),
+        decomposed_divisor: std::ptr::null(),
+        num_scalars: 0,
+        active_bits: 0,
+    }
+}
+
 // If we build the Vec<u64> inside prepare_cuda_radix_ffi
 // the data gets dropped before the call to the Cuda function,
 // and we get memory errors, hence why the reconstruction of
@@ -2889,6 +2898,8 @@ pub unsafe fn unchecked_unsigned_scalar_div_rem_integer_radix_kb_assign_async<
         0
     };
 
+    let mut scalar_multiplier_ffi = prepare_default_scalar_multiplier();
+
     let decomposed_divisor = BlockDecomposer::with_early_stop_at_zero(divisor, 1)
         .iter_as::<u64>()
         .collect::<Vec<_>>();
@@ -2899,6 +2910,15 @@ pub unsafe fn unchecked_unsigned_scalar_div_rem_integer_radix_kb_assign_async<
             divisor_has_at_least_one_set[i % msg_bits] = 1;
         }
     }
+
+    scalar_multiplier_ffi.decomposed_divisor = decomposed_divisor.as_ptr();
+    scalar_multiplier_ffi.divisor_has_at_least_one_set = divisor_has_at_least_one_set.as_ptr();
+    scalar_multiplier_ffi.num_scalars = decomposed_divisor.len() as u32;
+    scalar_multiplier_ffi.active_bits = decomposed_divisor
+        .iter()
+        .take(msg_bits * num_blocks as usize)
+        .filter(|&&bit| bit == 1u64)
+        .count() as u32;
 
     scalar_divisor_ffi.is_divisor_pow2 = is_divisor_power_of_two;
     scalar_divisor_ffi.is_abs_divisor_one = divisor == Scalar::ONE;
@@ -2930,13 +2950,6 @@ pub unsafe fn unchecked_unsigned_scalar_div_rem_integer_radix_kb_assign_async<
     let mut cuda_ffi_remainder =
         prepare_cuda_radix_ffi(remainder, &mut quotient_degrees, &mut quotient_noise_levels);
 
-    let num_scalars_divisor = decomposed_divisor.len() as u32;
-    let active_bits_divisor = decomposed_divisor
-        .iter()
-        .take(msg_bits * num_blocks as usize)
-        .filter(|&&bit| bit == 1u64)
-        .count() as u32;
-
     scratch_integer_unsigned_scalar_div_rem_radix_kb_64(
         streams.ptr.as_ptr(),
         streams.gpu_indexes_ptr(),
@@ -2955,7 +2968,7 @@ pub unsafe fn unchecked_unsigned_scalar_div_rem_integer_radix_kb_assign_async<
         carry_modulus.0 as u32,
         pbs_type as u32,
         &raw const scalar_divisor_ffi,
-        active_bits_divisor,
+        &raw const scalar_multiplier_ffi,
         true,
         allocate_ms_array,
     );
@@ -2971,9 +2984,7 @@ pub unsafe fn unchecked_unsigned_scalar_div_rem_integer_radix_kb_assign_async<
         ksks.ptr.as_ptr(),
         &raw const ms_noise_reduction_key_ffi,
         &raw const scalar_divisor_ffi,
-        divisor_has_at_least_one_set.as_ptr(),
-        decomposed_divisor.as_ptr(),
-        num_scalars_divisor,
+        &raw const scalar_multiplier_ffi,
         clear_blocks.as_c_ptr(0),
         h_clear_blocks.as_ptr().cast::<std::ffi::c_void>(),
         min(clear_blocks.len() as u32, num_blocks),
@@ -3040,6 +3051,8 @@ pub unsafe fn unchecked_signed_scalar_div_rem_integer_radix_kb_assign_async<
         scalar_divisor_ffi.ilog2_divisor = divisor.ilog2();
     }
 
+    let mut scalar_multiplier_ffi = prepare_default_scalar_multiplier();
+
     let decomposed_divisor = BlockDecomposer::with_early_stop_at_zero(divisor, 1)
         .iter_as::<u64>()
         .collect::<Vec<_>>();
@@ -3050,6 +3063,15 @@ pub unsafe fn unchecked_signed_scalar_div_rem_integer_radix_kb_assign_async<
             divisor_has_at_least_one_set[i % msg_bits] = 1;
         }
     }
+
+    scalar_multiplier_ffi.decomposed_divisor = decomposed_divisor.as_ptr();
+    scalar_multiplier_ffi.divisor_has_at_least_one_set = divisor_has_at_least_one_set.as_ptr();
+    scalar_multiplier_ffi.num_scalars = decomposed_divisor.len() as u32;
+    scalar_multiplier_ffi.active_bits = decomposed_divisor
+        .iter()
+        .take(msg_bits * num_blocks as usize)
+        .filter(|&&bit| bit == 1u64)
+        .count() as u32;
 
     scalar_divisor_ffi.is_chosen_multiplier_geq_two_pow_numerator = chosen_multiplier.multiplier
         >= (<Scalar::Unsigned as Reciprocable>::DoublePrecision::ONE << (numerator_bits - 1));
@@ -3118,13 +3140,6 @@ pub unsafe fn unchecked_signed_scalar_div_rem_integer_radix_kb_assign_async<
     let mut cuda_ffi_remainder =
         prepare_cuda_radix_ffi(remainder, &mut quotient_degrees, &mut quotient_noise_levels);
 
-    let num_scalars_divisor = decomposed_divisor.len() as u32;
-    let active_bits_divisor = decomposed_divisor
-        .iter()
-        .take(message_modulus.0.ilog2() as usize * num_blocks as usize)
-        .filter(|&&bit| bit == 1u64)
-        .count() as u32;
-
     scratch_integer_signed_scalar_div_rem_radix_kb_64(
         streams.ptr.as_ptr(),
         streams.gpu_indexes_ptr(),
@@ -3143,7 +3158,7 @@ pub unsafe fn unchecked_signed_scalar_div_rem_integer_radix_kb_assign_async<
         carry_modulus.0 as u32,
         pbs_type as u32,
         &raw const scalar_divisor_ffi,
-        active_bits_divisor,
+        &raw const scalar_multiplier_ffi,
         true,
         allocate_ms_array,
     );
@@ -3159,9 +3174,7 @@ pub unsafe fn unchecked_signed_scalar_div_rem_integer_radix_kb_assign_async<
         ksks.ptr.as_ptr(),
         &raw const ms_noise_reduction_key_ffi,
         &raw const scalar_divisor_ffi,
-        divisor_has_at_least_one_set.as_ptr(),
-        decomposed_divisor.as_ptr(),
-        num_scalars_divisor,
+        &raw const scalar_multiplier_ffi,
         numerator_bits,
     );
 
@@ -3212,10 +3225,13 @@ where
     scalar_divisor_ffi.divisor_has_more_bits_than_numerator =
         MiniUnsignedInteger::ceil_ilog2(divisor) > numerator_bits;
 
+    let mut scalar_multiplier_ffi = prepare_default_scalar_multiplier();
+
     let decomposed_divisor = BlockDecomposer::with_early_stop_at_zero(divisor, 1)
         .iter_as::<u64>()
         .collect::<Vec<_>>();
-    let active_bits_divisor = decomposed_divisor
+
+    scalar_multiplier_ffi.active_bits = decomposed_divisor
         .iter()
         .take(msg_bits * num_blocks as usize)
         .filter(|&&bit| bit == 1u64)
@@ -3278,7 +3294,7 @@ where
         carry_modulus.0 as u32,
         pbs_type as u32,
         &raw const scalar_divisor_ffi,
-        active_bits_divisor,
+        &raw const scalar_multiplier_ffi,
         false,
         allocate_ms_array,
     );
@@ -3330,10 +3346,13 @@ where
     scalar_divisor_ffi.is_divisor_negative = divisor < Scalar::ZERO;
     scalar_divisor_ffi.is_divisor_zero = divisor == Scalar::ZERO;
 
+    let mut scalar_multiplier_ffi = prepare_default_scalar_multiplier();
+
     let decomposed_divisor = BlockDecomposer::with_early_stop_at_zero(divisor, 1)
         .iter_as::<u64>()
         .collect::<Vec<_>>();
-    let active_bits_divisor = decomposed_divisor
+
+    scalar_multiplier_ffi.active_bits = decomposed_divisor
         .iter()
         .take(msg_bits * num_blocks as usize)
         .filter(|&&bit| bit == 1u64)
@@ -3382,7 +3401,7 @@ where
         carry_modulus.0 as u32,
         pbs_type as u32,
         &raw const scalar_divisor_ffi,
-        active_bits_divisor,
+        &raw const scalar_multiplier_ffi,
         false,
         allocate_ms_array,
     );

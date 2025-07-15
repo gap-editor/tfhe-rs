@@ -317,6 +317,28 @@ const _: () = {
         divisor_has_more_bits_than_numerator
     ) - 60usize];
 };
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct CudaScalarMultiplierFFI {
+    pub divisor_has_at_least_one_set: *const u64,
+    pub decomposed_divisor: *const u64,
+    pub num_scalars: u32,
+    pub active_bits: u32,
+}
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of CudaScalarMultiplierFFI"][::std::mem::size_of::<CudaScalarMultiplierFFI>() - 24usize];
+    ["Alignment of CudaScalarMultiplierFFI"]
+        [::std::mem::align_of::<CudaScalarMultiplierFFI>() - 8usize];
+    ["Offset of field: CudaScalarMultiplierFFI::divisor_has_at_least_one_set"]
+        [::std::mem::offset_of!(CudaScalarMultiplierFFI, divisor_has_at_least_one_set) - 0usize];
+    ["Offset of field: CudaScalarMultiplierFFI::decomposed_divisor"]
+        [::std::mem::offset_of!(CudaScalarMultiplierFFI, decomposed_divisor) - 8usize];
+    ["Offset of field: CudaScalarMultiplierFFI::num_scalars"]
+        [::std::mem::offset_of!(CudaScalarMultiplierFFI, num_scalars) - 16usize];
+    ["Offset of field: CudaScalarMultiplierFFI::active_bits"]
+        [::std::mem::offset_of!(CudaScalarMultiplierFFI, active_bits) - 20usize];
+};
 unsafe extern "C" {
     pub fn scratch_cuda_apply_univariate_lut_kb_64(
         streams: *const *mut ffi::c_void,
@@ -1661,7 +1683,7 @@ unsafe extern "C" {
         carry_modulus: u32,
         pbs_type: PBS_TYPE,
         scalar_divisor_ffi: *const CudaScalarDivisorFFI,
-        active_bits_divisor: u32,
+        scalar_multiplier_ffi: *const CudaScalarMultiplierFFI,
         allocate_gpu_memory: bool,
         allocate_ms_array: bool,
     ) -> u64;
@@ -1678,9 +1700,7 @@ unsafe extern "C" {
         ksks: *const *mut ffi::c_void,
         ms_noise_reduction_key: *const CudaModulusSwitchNoiseReductionKeyFFI,
         scalar_divisor_ffi: *const CudaScalarDivisorFFI,
-        divisor_has_at_least_one_set: *const u64,
-        decomposed_divisor: *const u64,
-        num_scalars_divisor: u32,
+        scalar_multiplier_ffi: *const CudaScalarMultiplierFFI,
         clear_blocks: *const ffi::c_void,
         h_clear_blocks: *const ffi::c_void,
         num_clear_blocks: u32,
@@ -1713,7 +1733,7 @@ unsafe extern "C" {
         carry_modulus: u32,
         pbs_type: PBS_TYPE,
         scalar_divisor_ffi: *const CudaScalarDivisorFFI,
-        active_bits_divisor: u32,
+        scalar_multiplier_ffi: *const CudaScalarMultiplierFFI,
         allocate_gpu_memory: bool,
         allocate_ms_array: bool,
     ) -> u64;
@@ -1730,9 +1750,7 @@ unsafe extern "C" {
         ksks: *const *mut ffi::c_void,
         ms_noise_reduction_key: *const CudaModulusSwitchNoiseReductionKeyFFI,
         scalar_divisor_ffi: *const CudaScalarDivisorFFI,
-        divisor_has_at_least_one_set: *const u64,
-        decomposed_divisor: *const u64,
-        num_scalars_divisor: u32,
+        scalar_multiplier_ffi: *const CudaScalarMultiplierFFI,
         numerator_bits: u32,
     );
 }
