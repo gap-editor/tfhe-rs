@@ -208,6 +208,25 @@ impl CompressedNoiseSquashingCompressionKey {
             lwe_per_glwe: self.lwe_per_glwe,
         }
     }
+
+    pub fn from_raw_parts(
+        packing_key_switching_key: SeededLwePackingKeyswitchKey<Vec<u128>>,
+        lwe_per_glwe: LweCiphertextCount,
+    ) -> Self {
+        Self {
+            packing_key_switching_key,
+            lwe_per_glwe,
+        }
+    }
+
+    pub fn into_raw_parts(self) -> (SeededLwePackingKeyswitchKey<Vec<u128>>, LweCiphertextCount) {
+        let Self {
+            packing_key_switching_key,
+            lwe_per_glwe,
+        } = self;
+
+        (packing_key_switching_key, lwe_per_glwe)
+    }
 }
 
 impl ParameterSetConformant for CompressedNoiseSquashingCompressionKey {

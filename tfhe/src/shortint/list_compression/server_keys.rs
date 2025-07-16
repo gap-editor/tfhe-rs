@@ -246,6 +246,27 @@ pub struct NoiseSquashingCompressionKey {
     pub(super) lwe_per_glwe: LweCiphertextCount,
 }
 
+impl NoiseSquashingCompressionKey {
+    pub fn from_raw_parts(
+        packing_key_switching_key: LwePackingKeyswitchKey<Vec<u128>>,
+        lwe_per_glwe: LweCiphertextCount,
+    ) -> Self {
+        Self {
+            packing_key_switching_key,
+            lwe_per_glwe,
+        }
+    }
+
+    pub fn into_raw_parts(self) -> (LwePackingKeyswitchKey<Vec<u128>>, LweCiphertextCount) {
+        let Self {
+            packing_key_switching_key,
+            lwe_per_glwe,
+        } = self;
+
+        (packing_key_switching_key, lwe_per_glwe)
+    }
+}
+
 impl NoiseSquashingPrivateKey {
     pub fn new_noise_squashing_compression_key(
         &self,
